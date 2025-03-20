@@ -1,5 +1,5 @@
 import { Application, Request, Response } from "express"
-import { GetProductValidation } from "./validators/product-id"
+import { ProductIdValidation as ProductIdValidation } from "./validators/product-id"
 import { AppDataSource } from "../db/database"
 import { Product } from "../db/models/product"
 import { CreateProductValidation } from "./validators/create-product"
@@ -13,7 +13,7 @@ export const initHandlers = (app: Application) => {
 
     app.get("/products/:id", async (req: Request, res: Response) => {
         try {
-            const validation = GetProductValidation.validate(req.params);
+            const validation = ProductIdValidation.validate(req.params);
             if (validation.error) {
                 res.status(400).send(generateValidationErrorMessage(validation.error.details))
                 return
@@ -83,6 +83,30 @@ export const initHandlers = (app: Application) => {
     
             const productUpdate = await productRepository.save(productFound)
             res.status(200).send(productUpdate)
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({ error: "Internal error" })
+        }
+    })
+
+    app.delete("/products/:id", async (req: Request, res: Response) => {
+        try {
+            const validation = ProductIdValidation.validate({ ...req.params, ...req.body })
+            if (validation.error) {
+                res.status(400).send(generateValidationErrorMessage(validation.error.details))
+                return
+            }
+    
+            const updateProduct = validation.value
+            const productRepository = AppDataSource.getRepository(Product)
+            const productFound = await productRepository.findOneBy({ id: updateProduct.id })
+            if (productFound === null) {
+                res.status(404).send({ "error": `product ${updateProduct.id} not found` })
+                return
+            }
+    
+            const productDeleted = await productRepository.remove(productFound)
+            res.status(200).send(productDeleted)
         } catch (error) {
             console.log(error)
             res.status(500).send({ error: "Internal error" })

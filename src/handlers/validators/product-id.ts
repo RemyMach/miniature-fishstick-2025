@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-export const GetProductValidation = Joi.object<ProductId>({
+export const ProductIdValidation = Joi.object<ProductId>({
     id: Joi.number().required()
 })
 
