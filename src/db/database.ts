@@ -8,5 +8,6 @@ export const AppDataSource = new DataSource({
     password: "admin",
     database: "mydatabase",
     logging: true,
-    synchronize: true
+    synchronize: true,
+    entities: ["src/db/models/*.ts"]
 })
