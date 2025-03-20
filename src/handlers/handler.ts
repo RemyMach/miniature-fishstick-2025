@@ -5,10 +5,54 @@ import { Product } from "../db/models/product"
 import { CreateProductValidation } from "./validators/create-product"
 import { generateValidationErrorMessage } from "./validators/generate-validation-message"
 import { ProductUpdateValidation } from "./validators/update-product"
+import { ListProductsValidation } from "./validators/list-products"
 
 export const initHandlers = (app: Application) => {
-    app.get("/ping", (req: Request, res: Response) => {
-        res.send({ "message": "hello world" })
+    app.get("/health", (req: Request, res: Response) => {
+        res.send({ "message": "ping" })
+    })
+
+    app.get("/products", async (req: Request, res: Response) => {
+        try {
+            const validation = ListProductsValidation.validate(req.query);
+            if (validation.error) {
+                res.status(400).send(generateValidationErrorMessage(validation.error.details))
+                return
+            }
+
+            const listProductRequest = validation.value
+            console.log(listProductRequest)
+
+            const query = AppDataSource.createQueryBuilder(Product, 'product')
+
+            if (listProductRequest.priceMax !== undefined) {
+                query.andWhere("product.price <= :priceMax", { priceMax: listProductRequest.priceMax })
+            }
+
+            query.skip((listProductRequest.page - 1) * listProductRequest.limit);
+            query.take(listProductRequest.limit);
+
+            const [products, totalCount] = await query.getManyAndCount();
+
+            const page = listProductRequest.page
+            const totalPages = Math.ceil(totalCount / listProductRequest.limit);
+
+            res.send(
+                {
+                    data: products,
+                    page_size: listProductRequest.limit,
+                    page,
+                    total_count: totalCount,
+                    total_pages: totalPages,
+                }
+            )
+
+        } catch (error) {
+            if (error instanceof Error) {
+                console.log(`Internal error: ${error.message}`)
+            }
+            res.status(500).send({ "message": "internal error" })
+        }
     })
 
     app.get("/products/:id", async (req: Request, res: Response) => {
@@ -48,7 +92,7 @@ export const initHandlers = (app: Application) => {
 
             const createProductRequest = validation.value
             const productRepository = AppDataSource.getRepository(Product)
-            const product = productRepository.create({ ...createProductRequest})
+            const product = productRepository.create({ ...createProductRequest })
             const productCreated = await productRepository.save(product);
 
             res.status(201).send(productCreated)
@@ -68,7 +112,7 @@ export const initHandlers = (app: Application) => {
                 res.status(400).send(generateValidationErrorMessage(validation.error.details))
                 return
             }
-    
+
             const updateProduct = validation.value
             const productRepository = AppDataSource.getRepository(Product)
             const productFound = await productRepository.findOneBy({ id: updateProduct.id })
@@ -76,11 +120,11 @@ export const initHandlers = (app: Application) => {
                 res.status(404).send({ "error": `product ${updateProduct.id} not found` })
                 return
             }
-    
+
             if (updateProduct.price) {
                 productFound.price = updateProduct.price
             }
-    
+
             const productUpdate = await productRepository.save(productFound)
             res.status(200).send(productUpdate)
         } catch (error) {
@@ -96,7 +140,7 @@ export const initHandlers = (app: Application) => {
                 res.status(400).send(generateValidationErrorMessage(validation.error.details))
                 return
             }
-    
+
             const updateProduct = validation.value
             const productRepository = AppDataSource.getRepository(Product)
             const productFound = await productRepository.findOneBy({ id: updateProduct.id })
@@ -104,7 +148,7 @@ export const initHandlers = (app: Application) => {
                 res.status(404).send({ "error": `product ${updateProduct.id} not found` })
                 return
             }
-    
+
             const productDeleted = await productRepository.remove(productFound)
             res.status(200).send(productDeleted)
         } catch (error) {
