@@ -7,7 +7,6 @@ const app = async () => {
     const port = 3000
     app.use(express.json())
     initHandlers(app)
-
     try {
         await AppDataSource.initialize()
     } catch (error) {
