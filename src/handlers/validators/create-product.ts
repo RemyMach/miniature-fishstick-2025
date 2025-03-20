@@ -5,7 +5,6 @@ export interface CreateProductRequest {
     price: number
 }
 
-
 export const CreateProductValidation = Joi.object<CreateProductRequest>({
     name: Joi.string()
         .min(3)

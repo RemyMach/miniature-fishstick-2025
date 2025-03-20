@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "dev": "ts-node src/main.ts",
     "start:dev": "nodemon -e ts --exec ts-node src/main.ts",
     "start:dev:js": "nodemon -e ts --exec \"tsc && node ./dist/main.js\""
   },

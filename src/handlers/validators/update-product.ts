@@ -7,5 +7,5 @@ export interface UpdateProductRequest {
 
 export const ProductUpdateValidation = Joi.object<UpdateProductRequest>({
     id: Joi.number().required(),
-    price: Joi.number().min(1).optional()
+    price: Joi.number().min(1)
 })

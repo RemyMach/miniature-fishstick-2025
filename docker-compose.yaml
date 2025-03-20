@@ -21,5 +21,22 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: postgres
 
+  app:
+    container_name: my-app
+    build:
+      context: .
+    volumes:
+      - ./src:/app/src
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_NAME=mydatabase
+      - DB_PASSWORD=admin
+      - DB_USER=admin
+      - DB_SYNCHRONISE=true
+      - DB_HOST=postgres
+    depends_on:
+      - postgres
+
 volumes:
   postgres_esgi_data:
