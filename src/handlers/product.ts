@@ -7,6 +7,31 @@ import { ListProductsValidation } from "./validators/list-products";
 import { ProductIdValidation } from "./validators/product-id";
 import { ProductUpdateValidation } from "./validators/update-product";
 
+/**
+    * @openapi
+    * '/products':
+    *  post:
+    *     tags:
+    *     - Products
+    *     summary: Create a new product
+    *     requestBody:
+    *       required: true
+    *       content:
+    *         application/json:
+    *           schema:
+    *             $ref: '#/components/schemas/CreateProduct'
+    *     responses:
+    *       200:
+    *         description: Product created
+    *         content:
+    *          application/json:
+    *           example:
+    *             "id": "10"
+    *             "name": "Courgette"
+    *             "description": "product description"
+    *             "price": 879
+    *             "createdAt": "2023-04-03T00:25:32.189Z"
+    */
 export const createProductHandler = async (req: Request, res: Response) => {
     try {
         const validation = CreateProductValidation.validate(req.body);

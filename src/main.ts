@@ -1,6 +1,7 @@
 import express from "express"
 import { initHandlers } from "./handlers/handler"
 import { AppDataSource } from "./db/database"
+import { swaggerDocs } from "./handlers/swagger/swagger"
 
 const app = async () => {
     const app = express()
@@ -17,6 +18,7 @@ const app = async () => {
 
     app.listen(port, () => {
         console.log(`Server running on http://localhost:${port}`)
+        swaggerDocs(app, port);
     })
 }
 
