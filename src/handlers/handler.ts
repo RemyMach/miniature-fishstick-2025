@@ -1,6 +1,6 @@
 import { Application, Request, Response } from "express"
 import { createProductHandler, deleteProductHandler, detailedProductHandler, listProductHandler, updateProductHandler } from "./product"
-import { createUser } from "./auth"
+import { createUser, login } from "./auth"
 
 export const initHandlers = (app: Application) => {
     app.get("/health", (_: Request, res: Response) => {
@@ -14,4 +14,5 @@ export const initHandlers = (app: Application) => {
     app.delete("/products/:id", deleteProductHandler)
 
     app.post("/auth/signup", createUser)
+    app.post("/auth/login", login)
 }

@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import { createUserValidation } from "./validators/auth/create-user";
+import { createUserValidation, LoginUserValidation } from "./validators/auth/create-user";
 import { generateValidationErrorMessage } from "./validators/generate-validation-message";
-import { hash } from "bcrypt";
+import { compare, hash } from "bcrypt";
 import { AppDataSource } from "../db/database";
 import { User } from "../db/models/user";
 import { QueryFailedError } from "typeorm";
+import { sign } from "jsonwebtoken";
+import { Token } from "../db/models/token";
 
 export const createUser = async(req: Request, res: Response) => {
     try{
@@ -38,3 +40,42 @@ export const createUser = async(req: Request, res: Response) => {
         res.status(500).send({"message": "internal error"})
     }
 }
+
+export const login = async (req: Request, res: Response) => {
+
+    try {
+        const validation = LoginUserValidation.validate(req.body)
+        if (validation.error) {
+            res.status(400).send(generateValidationErrorMessage(validation.error.details))
+            return
+        }
+
+        const loginRequest = validation.value
+        const userRepository = AppDataSource.getRepository(User)
+        const user = await userRepository.findOneBy({
+            email: loginRequest.email
+        })
+        if(user === null) {
+            res.status(400).send({"message": "email or password not valid"})
+            return
+        }
+
+        const isValid = await compare(loginRequest.password, user.password)
+        if(!isValid) {
+            res.status(400).send({"message": "email or password not valid"})
+            return
+        }
+
+        const secret = "valuerandom"
+        const token = sign({ userId: user.id, email: user.email}, secret, {expiresIn: '1h'})
+
+        const tokenRepository = AppDataSource.getRepository(Token)
+        const tokenCreated = await tokenRepository.save({token, user})
+        res.status(201).send({token: (await tokenCreated).token})
+    } catch(error) {
+        if (error instanceof Error) {
+            console.log(error.message)
+        }
+        res.status(500).send({"message": "internal error"})
+    }
+} 
